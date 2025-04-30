@@ -1,23 +1,30 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 #include "menu.h"
 #include "board.h"
 #include "generator.h"
-//TODO: Saving and loading + README and the meme
+#include "save_load.h"
 
-void move_handler(Board* board) {
+
+void move_handler(GameInfo* gi) {
     int row, col, val;
     char input[20];
-    char val_str[5], row_str[5], col_str[5];
-
+    char row_str[5], col_str[5];
+    Board * board = gi->board;
     while (!board_is_full(board)) {
+        char val_str[5];
         board_print(board);
 
-        printf("Enter your move (row col value), or 'q' to quit:\n");
+        printf("Enter your move (row col value),'s' to save or 'q' to quit:\n");
         fgets(input, sizeof(input), stdin);
         if (input[0] == 'q' || input[0] == 'Q') {
             printf("Quitting...\n");
             return;
+        }
+        if (input[0] == 's' || input[0] == 'S') {
+            save_game(gi,"save.dat");
+            continue;
         }
 
         if (sscanf(input, "%s %s %s", row_str, col_str, val_str) != 3) {
@@ -26,13 +33,13 @@ void move_handler(Board* board) {
         }
 
         // Convert row
-        if (row_str[0] >= 'A' && row_str[0] <= 'Z')
+        if (row_str[0] >= 'A' && row_str[0] <= 'Z' || row_str[0] >= 'a' && row_str[0] <= 'z')
             row = 10 + (row_str[0] - 'A');
         else
             row = atoi(row_str) - 1;
 
         // Convert col
-        if (col_str[0] >= 'A' && col_str[0] <= 'Z')
+        if (col_str[0] >= 'A' && col_str[0] <= 'Z' || col_str[0] >= 'a' && col_str[0] <= 'z')
             col = 10 + (col_str[0] - 'A');
         else
             col = atoi(col_str) - 1;
@@ -65,8 +72,10 @@ void move_handler(Board* board) {
 
         board_set(board, row, col, val);
     }
+    time_t end_time = time(NULL); //Stops the times
+    int duration = (int)difftime(end_time, gi->start_time);
 
-    printf("Congratz on winning ¯\\_(ツ)_/¯\n");
+    printf("\nYou finished in %d : %d.\n",duration/60,duration % 60);
 }
 
 static void new_game(GameInfo * gi) {
@@ -125,7 +134,10 @@ static void new_game(GameInfo * gi) {
         board_free(board);
         return;
     }
-    move_handler(board);
+    gi->board = board;
+    gi->start_time = time(NULL);
+    move_handler(gi);
+
     board_free(board);
 }
 
@@ -133,20 +145,35 @@ static void new_game(GameInfo * gi) {
 
 void menu() {
     int choice;
-
+    GameInfo gi = {0};
     while (1) {
         printf("\n    SUDOKU\n");
         printf("1. New Game\n");
-        printf("2. Instructions\n");
-        printf("3. Exit\n");
+        printf("2. Load game \n");
+        printf("3. Instructions\n");
+        printf("4. Exit\n");
         scanf("%d", &choice);
-
+        getchar(); //Clean newline
         switch (choice) {
             case 1:
-                GameInfo gi;
+                if (gi.board) {
+                    board_free(gi.board);  // Free previous board if any
+                    gi.board = NULL;
+                }
                 new_game(&gi);
                 return;
             case 2:
+                if (gi.board) {
+                    board_free(gi.board);  // Free previous board if any
+                    gi.board = NULL;
+                }
+                if (load_game(&gi, "save.dat")) {
+                    move_handler(&gi);
+                    board_free(gi.board);
+                    gi.board = NULL;
+                }
+                break;
+            case 3:
                 printf("\nThe player needs to fill the empty spaces with numbers\n"
                        "so that the same number doesn't appear more than once in:\n"
                        "1. Row\n"
@@ -155,7 +182,7 @@ void menu() {
                        "4. Diagonal (hard mode)\n"
                        "Good luck!\n");
                 break;
-            case 3:
+            case 4:
                 printf("Exiting...\n");
                 return ;
             default:
