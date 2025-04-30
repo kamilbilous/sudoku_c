@@ -2,7 +2,6 @@
 #include "board.h"
 #include <math.h>
 #include <string.h>
-#include <ctype.h>
 #include <stdlib.h>
 
 Board* board_create(int size) {
@@ -29,30 +28,40 @@ void board_free(Board* board) {
     free(board);
 }
 void board_print(Board* board) {
-    if (!board) {
-        return;
-    }
+    if (!board) return;
+
     int n = board->size;
-    printf("  ");
+
+    // Print column headers
+    printf("   ");
     for (int c = 0; c < n; c++) {
-        printf("%d |",c+1);
+        if (c + 1 <= 9)
+            printf(" %d", c + 1);
+        else
+            printf(" %c", 'A' + (c - 9));
     }
     printf("\n");
-    for (int r = 0; r<n; r++) {
-        printf("%2d ",r+1);
-        for (int c = 0; c<n; c++) {
-            int v = board_get(board,r,c);
-            if (v>0) {
-                printf(" %d",v);
-            }
-            else {
-                printf(" 0");
-            }
+
+    // Print each row
+    for (int r = 0; r < n; r++) {
+        if (r + 1 <= 9)
+            printf(" %d ", r + 1);
+        else
+            printf(" %c ", 'A' + (r - 9));
+
+        for (int c = 0; c < n; c++) {
+            int v = board_get(board, r, c);
+            if (v == 0)
+                printf(" .");
+            else if (v <= 9)
+                printf(" %d", v);
+            else
+                printf(" %c", 'A' + (v - 10));  // 10 -> A, 11 -> B, etc.
         }
         printf("\n");
     }
-
 }
+
 bool board_set(Board* board, int row, int col,int val) {
     if (!board || row<0 || col<0 || row >= board->size || col >= board->size) {
         return false;

@@ -71,7 +71,7 @@ bool remove_cells(Board* full_board, int k) {
     int attempts = 0;
     int removed = 0;
 
-    while (removed < k && attempts < n*n*5) {
+    while (removed < k && attempts < n*n*10) {
         int row = rand() % n;
         int col = rand() % n;
 
