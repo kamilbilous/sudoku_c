@@ -5,6 +5,7 @@
 #include "board.h"
 #include "generator.h"
 #include "save_load.h"
+#include "ga_solver.h"
 
 
 void move_handler(GameInfo* gi) {
@@ -16,7 +17,7 @@ void move_handler(GameInfo* gi) {
         char val_str[5];
         board_print(board);
 
-        printf("Enter your move (row col value),'s' to save or 'q' to quit:\n");
+        printf("Enter your move (row col value),'s' to save,'g' to solve using genetic alg or 'q' to quit:\n");
         fgets(input, sizeof(input), stdin);
         if (input[0] == 'q' || input[0] == 'Q') {
             printf("Quitting...\n");
@@ -25,6 +26,11 @@ void move_handler(GameInfo* gi) {
         if (input[0] == 's' || input[0] == 'S') {
             save_game(gi,"save.dat");
             continue;
+        }
+        if (input[0] == 'g' || input[0] == 'G') {
+            ga_solve(board);
+            board_print(board);
+            return;
         }
 
         if (sscanf(input, "%s %s %s", row_str, col_str, val_str) != 3) {

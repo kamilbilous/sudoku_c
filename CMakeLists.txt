@@ -19,7 +19,9 @@ target_include_directories(sudoku PUBLIC headers)
 # Define the executable
 add_executable(run_sudoku src/main.c
         src/save_load.c
-        headers/save_load.h)
+        headers/save_load.h
+        src/ga_solver.c
+        headers/ga_solver.h)
 
 # Link the sudoku library to the executable
 target_link_libraries(run_sudoku PRIVATE sudoku)
