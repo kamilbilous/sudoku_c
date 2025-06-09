@@ -77,6 +77,27 @@ static Individual* tournament(Individual pop[POP_SIZE]) {
     return best;
 }
 
+static Individual* roulette(Individual pop[POP_SIZE], int total_fitness) {
+    int r = rand() % total_fitness;
+    int sum = 0;
+    for (int i = 0; i < POP_SIZE; ++i) {
+        sum += pop[i].fitness;
+        if (sum >= r) return &pop[i];
+    }
+    return &pop[POP_SIZE - 1];
+}
+
+static void uniform_crossover(const Individual* p1, const Individual* p2, Individual* child, int size) {
+    for (int r = 0; r < size; ++r) {
+        for (int c = 0; c < size; ++c) {
+            if (rand() % 2)
+                child->grid[r][c] = p1->grid[r][c];
+            else
+                child->grid[r][c] = p2->grid[r][c];
+        }
+    }
+}
+
 static void crossover(const Individual* p1, const Individual* p2, Individual* child, int size) {
     for (int r = 0; r < size; ++r) {
         const int (*src)[MAX_SIZE] = (rand() & 1) ? p1->grid : p2->grid;
@@ -121,7 +142,7 @@ void ga_solve(Board* board) {
                 best_idx = i;
             }
         }
-        if (best_fitness == max_fitness && board_is_full(board)) {
+        if (best_fitness == max_fitness ) {
             for (int r = 0; r < size; ++r)
                 for (int c = 0; c < size; ++c)
                     board_set(board, r, c, pop[best_idx].grid[r][c]);
@@ -131,7 +152,10 @@ void ga_solve(Board* board) {
         for (int i = 0; i < POP_SIZE; ++i) {
             Individual *p1 = tournament(pop);
             Individual *p2 = tournament(pop);
-            crossover(p1, p2, &newpop[i], size);
+            //Individual *p1 = roulette(pop, max_fitness);
+            //Individual *p2 = roulette(pop, max_fitness);
+            //crossover(p1, p2, &newpop[i], size);
+            uniform_crossover(p1, p2, &newpop[i], size);
             mutate(&newpop[i], size);
             newpop[i].fitness = fitness(newpop[i].grid, size);
         }
